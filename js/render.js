@@ -3,8 +3,8 @@ let scene,
 	camera,
 	renderer,
 	composer,
-	bloomComposer,
-	finalComposer,
+	outlinePass,
+	fxaaPass,
 	renderScene,
 	controls;
 let useOrbitControls = true;
@@ -16,6 +16,26 @@ import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+import { Reflector } from "three/addons/objects/Reflector.js";
+import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
+import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
+import WebGPU from "three/addons/capabilities/WebGPU.js";
+import WebGL from "three/addons/capabilities/WebGL.js";
+import WebGPURenderer from "three/addons/renderers/webgpu/WebGPURenderer.js";
+import PostProcessing from "three/addons/renderers/common/PostProcessing.js";
+import {
+	MeshPhongNodeMaterial,
+	color,
+	pass,
+	reflector,
+	normalWorld,
+	texture,
+	uv,
+	viewportTopLeft,
+} from "three/nodes";
+import { ReflectorForSSRPass } from "three/addons/objects/ReflectorForSSRPass.js";
+import { SSRPass } from "three/addons/postprocessing/SSRPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 let moveForward = false;
 let moveBackward = false;
@@ -44,6 +64,8 @@ bloomLayer.set(BLOOM_SCENE);
 
 const materials = {};
 const darkMaterial = new THREE.MeshBasicMaterial({ color: "black" });
+let groundReflector, ssrPass;
+const selects = [];
 
 const models = {
 	ROADSTER: {
@@ -186,10 +208,13 @@ let polarAngleFreedom = /* 30 degrees above lockedPolarAngle */ (lockedPolarAngl
 let desiredResetAngle = normalizeAngle(currentModel.ROTATION.PITCH);
 const inactivityDelay = 2500; // 5 seconds
 let inactivityTimeout;
+window.isInteractingWithModel = false;
 
 function init() {
 	// Scene
 	scene = new THREE.Scene();
+	scene.background = new THREE.Color(0xf4f4f4);
+	scene.fog = new THREE.Fog(0xe4e4e4, 7, 20);
 
 	// Camera
 	const leftSide = document.querySelector(".leftSide");
@@ -220,73 +245,16 @@ function init() {
 	leftSide.appendChild(renderer.domElement);
 
 	// Lights
-	const theSun = new THREE.DirectionalLight(
-		0xffffff,
-		currentModel.LIGHTS.THESUN.INTENSITY
-	);
-	theSun.position.set(
-		currentModel.LIGHTS.THESUN.POSITION.X,
-		currentModel.LIGHTS.THESUN.POSITION.Y,
-		currentModel.LIGHTS.THESUN.POSITION.Z
-	);
-	theSun.castShadow = true;
-	theSun.shadow.mapSize.width = 2048;
-	theSun.shadow.mapSize.height = 2048;
-	theSun.shadow.camera.near = 0.5;
-	theSun.shadow.camera.far = 500;
-	scene.add(theSun);
 
-	const globalIllumination = new THREE.DirectionalLight(
-		0xffffff,
-		currentModel.LIGHTS.GLOBALILLUMINATION.INTENSITY
-	);
-	globalIllumination.position.set(
-		currentModel.LIGHTS.GLOBALILLUMINATION.POSITION.X,
-		currentModel.LIGHTS.GLOBALILLUMINATION.POSITION.Y,
-		currentModel.LIGHTS.GLOBALILLUMINATION.POSITION.Z
-	);
-	globalIllumination.castShadow = true;
-	globalIllumination.shadow.mapSize.width = 4096;
-	globalIllumination.shadow.mapSize.height = 4096;
-	globalIllumination.shadow.camera.near = 0.5;
-	globalIllumination.shadow.camera.far = 500;
-	scene.add(globalIllumination);
-
-	const topLight = new THREE.DirectionalLight(
-		0xffffff,
-		currentModel.LIGHTS.TOPLIGHT.INTENSITY
-	);
-	topLight.position.set(
-		currentModel.LIGHTS.TOPLIGHT.POSITION.X,
-		currentModel.LIGHTS.TOPLIGHT.POSITION.Y,
-		currentModel.LIGHTS.TOPLIGHT.POSITION.Z
-	);
-	topLight.castShadow = true;
-	topLight.shadow.mapSize.width = 4096;
-	topLight.shadow.mapSize.height = 4096;
-	topLight.shadow.camera.near = 0.5;
-	topLight.shadow.camera.far = 500;
-	scene.add(topLight);
+	addLights();
 
 	window.loadProgress += 5;
 
-	// Floor
-	const floorGeometry = new THREE.PlaneGeometry(9000, 9000);
-	const floorMaterial = new THREE.MeshStandardMaterial({
-		color: 0x808080,
-		roughness: 0,
-		metalness: 0.5,
-		envMapIntensity: 0.4,
-	});
-	const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-	floor.rotation.x = -Math.PI / 2;
-	floor.position.y = currentModel.FLOOR;
-	floor.receiveShadow = true;
-	scene.add(floor);
+	addFloor();
 
 	window.loadProgress += 5;
 
-	// GLTF Loader
+	// GLTF Loader*/
 	const loader = new GLTFLoader();
 	loader.load(
 		"../assets/models/" +
@@ -300,6 +268,7 @@ function init() {
 					node.castShadow = true;
 					node.receiveShadow = true;
 					node.layers.enable(BLOOM_SCENE); // Enable bloom for the car model
+					selects.push(node);
 				}
 			});
 			scene.add(gltf.scene);
@@ -322,9 +291,54 @@ function init() {
 	document.addEventListener("keydown", onExportKeyPress, false); // Add keydown event listener for exporting camera position and rotation
 }
 
+function addLights() {
+	const sunLight = new THREE.DirectionalLight(0xffffff, 6);
+	sunLight.shadow.camera.left = -8;
+	sunLight.shadow.camera.right = 8;
+	sunLight.shadow.camera.top = 8;
+	sunLight.shadow.camera.bottom = -8;
+	sunLight.shadow.camera.near = 0.5;
+	sunLight.shadow.camera.far = 80;
+	sunLight.shadow.mapSize.width = 512;
+	sunLight.shadow.mapSize.height = 512;
+	sunLight.shadow.bias = -0.0001;
+	sunLight.shadow.blurSamples = 500;
+	sunLight.castShadow = true;
+	sunLight.position.set(0.5, 3, 0.5);
+	scene.add(sunLight);
+}
+
+function addFloor() {
+	const floorGeometry = new THREE.CircleGeometry(20, 64);
+
+	groundReflector = new ReflectorForSSRPass(floorGeometry, {
+		clipBias: 0.0003,
+		textureWidth: window.innerWidth,
+		textureHeight: window.innerHeight,
+		color: 0x888888,
+		useDepthTexture: true,
+	});
+	groundReflector.material.depthWrite = false;
+	groundReflector.rotation.x = -Math.PI / 2;
+	groundReflector.position.y = currentModel.FLOOR;
+	groundReflector.visible = false; // Hide the ground reflector mesh
+	scene.add(groundReflector);
+
+	const shadowFloorMaterial = new THREE.ShadowMaterial({ opacity: 0.5 });
+	const shadowFloor = new THREE.Mesh(floorGeometry, shadowFloorMaterial);
+	shadowFloor.position.y = currentModel.FLOOR;
+	shadowFloor.rotation.x = -Math.PI / 2;
+	shadowFloor.receiveShadow = true;
+	scene.add(shadowFloor);
+}
+
 window.onWindowResize = function () {
 	onWindowResize();
 };
+
+let smoothPolar = false;
+let desiredPolarAngle;
+let scale1 = false;
 
 function onWindowResize() {
 	const leftSide = document.querySelector(".leftSide");
@@ -333,23 +347,31 @@ function onWindowResize() {
 	camera.aspect = w / h;
 	camera.updateProjectionMatrix();
 	renderer.setSize(w, h);
-	composer.setSize(w, h);
-	bloomComposer.setSize(w, h);
-	finalComposer.setSize(w, h);
+	groundReflector.getRenderTarget().setSize(w, h);
+	groundReflector.resolution.set(w, h);
 	/* Scale Changes */
 	const newSizeX = (1 - (1 - 0.3) * (1 - w / window.innerWidth));
 	const newSizeY = (1 - (1 - 0.3) * (1 - w / window.innerWidth));
 	const newSizeZ = (1 - (1 - 0.3) * (1 - w / window.innerWidth));
+	scale1 = (newSizeX < 1.02 && newSizeX > 0.98);
 	scene.scale.set(newSizeX, newSizeY, newSizeZ);
 	/* Angle Changes */
 	const newPolarAngle = 1.0;
 	lockedPolarAngle = Math.PI / 2 - (Math.PI / 2 - newPolarAngle) * (1 - w / window.innerWidth);
+	desiredPolarAngle = lockedPolarAngle;
 	// if the lockedPolarAngle is Math.PI/2, then give it the 41 degrees of freedom above the lockedAngle. Otherwise, the freedom is zero.
 	polarAngleFreedom = lockedPolarAngle === Math.PI / 2 ? (lockedPolarAngle * 41) / 180 : 0;
-	controls.minPolarAngle = lockedPolarAngle - polarAngleFreedom; // Allow freedom upward
-	controls.maxPolarAngle = lockedPolarAngle; // Lock angle at the top position
+	smoothPolar = true;
+	smoothAdjustPolarAngle(lockedPolarAngle);
+	/*controls.minPolarAngle = lockedPolarAngle - polarAngleFreedom;
+	controls.maxPolarAngle = lockedPolarAngle;*/
 
-	
+	/* Map Changes */
+	// when the leftSide at 100% width, the map should be at 0% opacity
+	// when the leftSide at 50% width, the map should be at 100% opacity
+	let opacity = (1 - 0) * (1 - w / window.innerWidth)*2;
+	document.querySelector(".map").style.opacity = opacity;
+
 	controls.update();
 }
 
@@ -380,7 +402,11 @@ function onStart(event) {
 	controls.maxAzimuthAngle = Infinity;
 	controls.minPolarAngle = lockedPolarAngle - polarAngleFreedom; // Allow freedom upward
 	controls.maxPolarAngle = lockedPolarAngle; // Lock angle at the top position
+	if (!window.isInteractingWithModel) {
+		window.hideMinimap();
+	}
 	smoothReset = false;
+	window.isInteractingWithModel = true;
 
 	// Clear the inactivity timeout if the user is active
 	clearTimeout(inactivityTimeout);
@@ -431,11 +457,39 @@ function doSmoothReset(desiredAngle) {
 
 	if (
 		Math.abs(currentAzimuthAngle - targetAzimuthAngle) < 0.001 &&
-		Math.abs(currentPolarAngle - targetPolarAngle) < 0.001
-	) {
+		Math.abs(currentPolarAngle - targetPolarAngle) < 0.001) {
 		onStart();
 		smoothReset = false;
+		if (window.isInteractingWithModel) {
+			window.showMinimap();
+		}
+		window.isInteractingWithModel = false;
 	}
+}
+
+function smoothAdjustPolarAngle(newAngle) {
+	if (!smoothPolar) return;
+	const targetPolarAngle = newAngle;
+	let currentPolarAngle = controls.getPolarAngle();
+
+	if (Math.abs(currentPolarAngle - targetPolarAngle) < 0.001) {
+		currentPolarAngle = targetPolarAngle;
+	}
+
+	const smoothFactor = 0.05;
+	const newPolarAngle =
+		currentPolarAngle +
+		smoothFactor * (targetPolarAngle - currentPolarAngle);
+
+	controls.minPolarAngle = newPolarAngle;
+	controls.maxPolarAngle = newPolarAngle;
+
+	controls.update(); // Update the controls to apply the changes
+
+	if (Math.abs(currentPolarAngle - targetPolarAngle) < 0.001 || scale1) {
+		smoothPolar = false;
+	}
+
 }
 
 function animationLoop(t) {
@@ -443,86 +497,64 @@ function animationLoop(t) {
 		doSmoothReset(desiredResetAngle);
 	}
 
+	if (smoothPolar) {
+		smoothAdjustPolarAngle(desiredPolarAngle);
+	}
+
 	if (useOrbitControls) {
 		controls.update(); // Update controls in the animation loop
 	} else {
 		updateCamera(); // Update camera for WASD controls
 	}
-	renderer.render(scene, camera);
-}
-
-function darkenNonBloomed(obj) {
-	if (obj.isMesh && bloomLayer.test(obj.layers) === false) {
-		materials[obj.uuid] = obj.material;
-		obj.material = darkMaterial;
-	}
-}
-
-function restoreMaterial(obj) {
-	if (materials[obj.uuid]) {
-		obj.material = materials[obj.uuid];
-		delete materials[obj.uuid];
-	}
+	composer.render();
 }
 
 function initPostProcessing() {
+	const scenePass = pass(scene, camera);
+	const scenePassColor = scenePass.getTextureNode();
+	const scenePassDepth = scenePass.getDepthNode().remapClamp(0.3, 0.5);
+
+	const scenePassColorBlurred = scenePassColor.gaussianBlur();
+	scenePassColorBlurred.directionNode = scenePassDepth;
+
+	const vignet = viewportTopLeft.distance(0.5).mul(1.35).clamp().oneMinus();
+
+	let postProcessing = new PostProcessing(renderer);
+	postProcessing.outputNode = scenePassColorBlurred.mul(vignet);
+
+	// Initialize the EffectComposer
 	composer = new EffectComposer(renderer);
-	renderScene = new RenderPass(scene, camera);
-	composer.addPass(renderScene);
 
-	let bloomPass = new UnrealBloomPass(
-		new THREE.Vector2(window.innerWidth, window.innerHeight),
-		1.5,
-		0.4,
-		0.85
-	);
-	bloomPass.threshold = 0.01;
-	bloomPass.strength = 0.2;
-	bloomPass.radius = 0.55;
-	//composer.addPass(bloomPass);
+	// Initialize the SSRPass
+	ssrPass = new SSRPass({
+		renderer,
+		scene,
+		camera,
+		width: window.innerWidth,
+		height: window.innerHeight,
+		groundReflector: groundReflector, // Use the groundReflector from addFloor()
+		selects: selects, // Use the selects array from addFloor()
+	});
 
-	bloomComposer = new EffectComposer(renderer);
-	bloomComposer.addPass(renderScene);
-	//bloomComposer.addPass(bloomPass);
+	// Configure SSRPass properties
+	ssrPass.thickness = 0.518;
+	ssrPass.infiniteThick = true;
+	ssrPass.maxDistance = 0.01;
+	ssrPass.opacity = 0.95;
+	ssrPass.blur = true;
+	ssrPass.fresnel = true;
+	ssrPass.distanceAttenuation = true;
+	ssrPass.bouncing = true;
 
-	finalComposer = new EffectComposer(renderer);
-	finalComposer.addPass(renderScene);
+	// Match groundReflector properties to ssrPass
+	//groundReflector.maxDistance = 0.006
+	groundReflector.opacity = ssrPass.opacity;
+	groundReflector.fresnel = ssrPass.fresnel;
+	groundReflector.distanceAttenuation = ssrPass.distanceAttenuation;
 
-	const finalPass = new ShaderPass(
-		new THREE.ShaderMaterial({
-			uniforms: {
-				baseTexture: { value: null },
-				bloomTexture: { value: bloomComposer.renderTarget2.texture },
-			},
-			vertexShader: `
-                varying vec2 vUv;
-                void main() {
-                    vUv = uv;
-                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                }
-            `,
-			fragmentShader: `
-                uniform sampler2D baseTexture;
-                uniform sampler2D bloomTexture;
-                varying vec2 vUv;
-                void main() {
-                    gl_FragColor = (texture2D(baseTexture, vUv) + vec4(1.0) * texture2D(bloomTexture, vUv));
-                }
-            `,
-			blending: THREE.AdditiveBlending,
-			transparent: true,
-		}),
-		"baseTexture"
-	);
-	finalPass.needsSwap = true;
-	//finalComposer.addPass(finalPass);
-}
-
-function render() {
-	scene.traverse(darkenNonBloomed);
-	bloomComposer.render();
-	scene.traverse(restoreMaterial);
-	finalComposer.render();
+	// Add the passes to the composer
+	composer.addPass(ssrPass);
+	composer.addPass(new OutputPass());
 }
 
 function animate() {
@@ -567,7 +599,7 @@ function updateCamera() {
 
 // Event handlers for keydown and keyup events
 function onDocumentKeyDown(event) {
-	switch (event.code) {
+	/*switch (event.code) {
 		case "Digit1":
 			useOrbitControls = true;
 			initControls();
@@ -613,11 +645,11 @@ function onDocumentKeyDown(event) {
 		case "KeyN":
 			rotateRollRight = true;
 			break;
-	}
+	}*/
 }
 
 function onDocumentKeyUp(event) {
-	switch (event.code) {
+	/*switch (event.code) {
 		case "KeyW":
 			moveForward = false;
 			break;
@@ -655,28 +687,48 @@ function onDocumentKeyUp(event) {
 		case "KeyN":
 			rotateRollRight = false;
 			break;
-	}
+	}*/
 }
 
 // Function to export camera position and rotation
 function onExportKeyPress(event) {
-	if (event.code === "KeyE") {
+	/*if (event.code === "KeyE") {
 		// Press 'E' to export
 		console.log("Camera Position:", camera.position);
 		console.log("Camera Rotation:", camera.rotation);
-	}
+	}*/
 }
 
 // Initialize the scene
+window.loadText = "Loading 3D engine...";
 init();
 document.addEventListener("keydown", onDocumentKeyDown, false);
 document.addEventListener("keyup", onDocumentKeyUp, false);
+
+window.loadText = "Loading navigation...";
+// TODO: make this less ass at some point
 let mapChecker = setInterval(() => {
 	if (window.isMapLoaded && window.map.isStyleLoaded()) {
 		clearInterval(mapChecker);
-		window.loadProgress = 99;
-		setTimeout(() => {
-			window.loadProgress += 1;
-		}, 500);
+		window.loadProgress += 30;
+		window.loadText = "Loading integrations...";
+		let spotifyChecker = setInterval(() => {
+			if (window.isSpotifyLoaded) {
+				clearInterval(spotifyChecker);
+				window.loadProgress = 99;
+				setTimeout(() => {
+					window.loadProgress += 1;
+				}, 500);
+			}
+		}, 5);
 	}
 }, 5);
+
+window.themeRefreshRender = function (isLightMode) {
+	console.log("isLightMode: " + isLightMode);
+	scene.traverse((child) => {
+		if (child.isLight) {
+			child.intensity = isLightMode ? child.intensity * 5 : child.intensity * 0.2;
+		}
+	});
+}

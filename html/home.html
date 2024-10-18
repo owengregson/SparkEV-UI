@@ -17,19 +17,14 @@
 		<meta name="x-ua-compatible" content="ie=edge" />
 		<link href="../css/styles.css" rel="stylesheet" />
 		<link href="../assets/images/favicon.png" rel="icon" type="image/png" />
-		<link rel="preload" href="../js/env.js" as="script">
 		<script src="../js/env.js"></script>
+		<script src="../js/suppressor.js"></script>
+		<script src="../js/persistentStorage.js"></script>
 		<script src="../js/home.js"></script>
-		<script type="importmap">
-			{
-				"imports": {
-					"three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
-					"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
-				}
-			}
-		</script>
+		<script type="importmap">{"imports": {"three": "../js/modules/three/build/three.module.js","three/addons/": "../js/modules/three/examples/jsm/","three/nodes" : "../js/modules/three/examples/jsm/nodes/Nodes.js"}}</script>
+
+		<!-- API> MapBox -->
 		<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
-		<script src="../js/googleInjector.js"></script>
 		<link
 			href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css"
 			rel="stylesheet"
@@ -40,16 +35,23 @@
 			href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.1/mapbox-gl-directions.css"
 			type="text/css"
 		/>
-		<script src="../js/jquery-3.7.1.min.js"></script>
-		<link href="../css/fontawesome/css/fontawesome.css" rel="stylesheet" />
-		<link href="../css/fontawesome/css/brands.css" rel="stylesheet" />
-		<link href="../css/fontawesome/css/solid.css" rel="stylesheet" />
+
+		<!-- API> Google Maps -->
+		<script src="../js/googleInjector.js"></script>
+
+		<!-- API> Spotify -->
+		<script src="https://sdk.scdn.co/spotify-player.js"></script>
+
+		<script src="../js/modules/jquery/jquery-3.7.1.min.js"></script>
+		<link href="../css/modules/fontawesome/css/fontawesome.css" rel="stylesheet" />
+		<link href="../css/modules/fontawesome/css/brands.css" rel="stylesheet" />
+		<link href="../css/modules/fontawesome/css/solid.css" rel="stylesheet" />
 		<title>Spark EV</title>
 	</head>
 	<body>
-		<div id="loading">
+		<div id="loading" class="transition">
 			<div class="loader transition"></div>
-			<div class="loadStageTwo">
+			<div class="loadStageTwo transition">
 				<span class="loaderBar">
 					<div class="loaderBarFill"></div>
 				</span>
@@ -91,9 +93,13 @@
 					</div>
 					<div class="status-right">
 						<span class="time" id="time">12:30</span>
+						<span class="temperature" id="temperature">60°F</span>
 					</div>
 				</div>
 				<div class="leftSide" id="leftSide">
+					<div class="minimap-container visible">
+						<div class="minimap" id="minimap"></div>
+					</div>
 					<div class="flyout-container">
 						<div class="flyout music-flyout" id="music-flyout">
 							<div class="flyout-content">
@@ -102,15 +108,21 @@
 								>
 									<div class="music-details">
 										<img
-											src="../assets/images/album-cover.jpeg"
+											class="album-cover"
+											id="album-cover"
+											src="../assets/images/album-cover.png"
 											alt="Album Art"
 										/>
 										<div class="verticalSongDetails">
-											<span class="song-title"
-												>Song Title</span
+											<span
+												id="song-title"
+												class="song-title"
+												>...</span
 											>
-											<span class="song-artist"
-												>Artist</span
+											<span
+												id="song-artists"
+												class="song-artists"
+												>...</span
 											>
 										</div>
 									</div>
@@ -125,30 +137,36 @@
 										></i>
 									</div>
 								</div>
-								<div class="horizontal-divider">
+								<div class="playback-slider-container">
 									<div
-										class="progress"
-										style="width: 25%"
-									></div>
+										class="horizontal-divider playback-slider"
+									>
+										<div
+											id="playback-progress"
+											class="progress"
+											style="width: 0%"
+										></div>
+									</div>
 								</div>
 								<div
 									class="flyout-lowerSection music-flyout-lowerSection"
 								>
 									<i
 										class="fas fa-backward-step icon-clickable icon-titleColor"
-										data-buttonType="previous"
+										data-buttonType="previous-song"
 									></i>
 									<i
+										id="play-pause-playback"
 										class="fas fa-pause icon-clickable icon-titleColor"
-										data-buttonType="play"
+										data-buttonType="play-pause-playback"
 									></i>
 									<i
 										class="fas fa-forward-step icon-clickable icon-titleColor"
-										data-buttonType="next"
+										data-buttonType="skip-song"
 									></i>
 									<i
 										class="fas fa-heart icon-clickable"
-										data-buttonType="like"
+										data-buttonType="like-song"
 									></i>
 									<i
 										class="fas fa-list icon-clickable"
@@ -161,22 +179,32 @@
 								</div>
 							</div>
 						</div>
-						<div class="flyout navigation-flyout" id="navigation-flyout">
+						<div
+							class="flyout navigation-flyout"
+							id="navigation-flyout"
+						>
 							<div class="flyout-content">
 								<div
 									class="flyout-upperSection navigation-flyout-upperSection"
-								data-buttonType="open-navigation">
+									data-buttonType="open-navigation"
+								>
 									<i class="fas fa-magnifying-glass"></i>
 									<span>Navigate</span>
 								</div>
 								<div class="horizontal-divider"></div>
 								<div class="navigation-flyout-lowerSection">
-									<div class="navigation-item" data-buttonType="navigate-home">
+									<div
+										class="navigation-item"
+										data-buttonType="navigate-home"
+									>
 										<i class="fas fa-home"></i>
 										<span>Home</span>
 									</div>
 									<div class="vertical-divider"></div>
-									<div class="navigation-item" data-buttonType="navigate-work">
+									<div
+										class="navigation-item"
+										data-buttonType="navigate-work"
+									>
 										<i class="fas fa-briefcase"></i>
 										<span>Work</span>
 									</div>
@@ -190,17 +218,54 @@
 				</div>
 				<div class="rightSide" id="rightSide">
 					<div class="upper-flyout-container">
-						<div class="flyout directions-flyout" id="directions-flyout">
+						<div
+							class="flyout directions-flyout"
+							id="directions-flyout"
+						>
 							<div class="flyout-content">
 								<div
-									class="flyout-upperSection navigation-flyout-upperSection"
+									class="flyout-upperSection navigation-flyout-upperSection directions-flyout-upperSection"
 								>
 									<i class="fas fa-magnifying-glass"></i>
 									<span>Navigate</span>
 								</div>
-
 							</div>
 						</div>
+					</div>
+					<div class="appsHolder">
+						<div
+							class="app app-spotify app-closed"
+							data-appID="spotify"
+						>
+							<div class="spotify_upperNavBar">
+								<div class="spotify_upperNavBar_left">
+									<i class="fa-brands fa-spotify"></i>
+									<div class="vertical-divider"></div>
+									<i class="fas fa-magnifying-glass"></i>
+									<div class="vertical-divider"></div>
+									<i class="fas fa-list"></i>
+								</div>
+								<div class="spotify_upperNavBar_right">
+									<i class="fas fa-circle-user"></i>
+								</div>
+							</div>
+						</div>
+						<div
+							class="app app-phone app-closed"
+							data-appID="phone"
+						></div>
+						<div
+							class="app app-camera app-closed"
+							data-appID="camera"
+						></div>
+						<div
+							class="app app-games app-closed"
+							data-appID="games"
+						></div>
+						<div
+							class="app app-settings app-closed"
+							data-appID="settings"
+						></div>
 					</div>
 					<div class="map" id="map"></div>
 				</div>
@@ -258,6 +323,7 @@
 			</div>
 		</div>
 		<script type="module" src="../js/render.js"></script>
+		<script src="../js/spotify.js"></script>
 		<script type="module" src="../js/map.js"></script>
 	</body>
 </html>

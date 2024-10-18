@@ -15,278 +15,6 @@ document.addEventListener('keydown', function (event) {
 	}
 });
 
-function generateUUID() {
-	const _lut = [
-		"00",
-		"01",
-		"02",
-		"03",
-		"04",
-		"05",
-		"06",
-		"07",
-		"08",
-		"09",
-		"0a",
-		"0b",
-		"0c",
-		"0d",
-		"0e",
-		"0f",
-		"10",
-		"11",
-		"12",
-		"13",
-		"14",
-		"15",
-		"16",
-		"17",
-		"18",
-		"19",
-		"1a",
-		"1b",
-		"1c",
-		"1d",
-		"1e",
-		"1f",
-		"20",
-		"21",
-		"22",
-		"23",
-		"24",
-		"25",
-		"26",
-		"27",
-		"28",
-		"29",
-		"2a",
-		"2b",
-		"2c",
-		"2d",
-		"2e",
-		"2f",
-		"30",
-		"31",
-		"32",
-		"33",
-		"34",
-		"35",
-		"36",
-		"37",
-		"38",
-		"39",
-		"3a",
-		"3b",
-		"3c",
-		"3d",
-		"3e",
-		"3f",
-		"40",
-		"41",
-		"42",
-		"43",
-		"44",
-		"45",
-		"46",
-		"47",
-		"48",
-		"49",
-		"4a",
-		"4b",
-		"4c",
-		"4d",
-		"4e",
-		"4f",
-		"50",
-		"51",
-		"52",
-		"53",
-		"54",
-		"55",
-		"56",
-		"57",
-		"58",
-		"59",
-		"5a",
-		"5b",
-		"5c",
-		"5d",
-		"5e",
-		"5f",
-		"60",
-		"61",
-		"62",
-		"63",
-		"64",
-		"65",
-		"66",
-		"67",
-		"68",
-		"69",
-		"6a",
-		"6b",
-		"6c",
-		"6d",
-		"6e",
-		"6f",
-		"70",
-		"71",
-		"72",
-		"73",
-		"74",
-		"75",
-		"76",
-		"77",
-		"78",
-		"79",
-		"7a",
-		"7b",
-		"7c",
-		"7d",
-		"7e",
-		"7f",
-		"80",
-		"81",
-		"82",
-		"83",
-		"84",
-		"85",
-		"86",
-		"87",
-		"88",
-		"89",
-		"8a",
-		"8b",
-		"8c",
-		"8d",
-		"8e",
-		"8f",
-		"90",
-		"91",
-		"92",
-		"93",
-		"94",
-		"95",
-		"96",
-		"97",
-		"98",
-		"99",
-		"9a",
-		"9b",
-		"9c",
-		"9d",
-		"9e",
-		"9f",
-		"a0",
-		"a1",
-		"a2",
-		"a3",
-		"a4",
-		"a5",
-		"a6",
-		"a7",
-		"a8",
-		"a9",
-		"aa",
-		"ab",
-		"ac",
-		"ad",
-		"ae",
-		"af",
-		"b0",
-		"b1",
-		"b2",
-		"b3",
-		"b4",
-		"b5",
-		"b6",
-		"b7",
-		"b8",
-		"b9",
-		"ba",
-		"bb",
-		"bc",
-		"bd",
-		"be",
-		"bf",
-		"c0",
-		"c1",
-		"c2",
-		"c3",
-		"c4",
-		"c5",
-		"c6",
-		"c7",
-		"c8",
-		"c9",
-		"ca",
-		"cb",
-		"cc",
-		"cd",
-		"ce",
-		"cf",
-		"d0",
-		"d1",
-		"d2",
-		"d3",
-		"d4",
-		"d5",
-		"d6",
-		"d7",
-		"d8",
-		"d9",
-		"da",
-		"db",
-		"dc",
-		"dd",
-		"de",
-		"df",
-		"e0",
-		"e1",
-		"e2",
-		"e3",
-		"e4",
-		"e5",
-		"e6",
-		"e7",
-		"e8",
-		"e9",
-		"ea",
-		"eb",
-		"ec",
-		"ed",
-		"ee",
-		"ef",
-		"f0",
-		"f1",
-		"f2",
-		"f3",
-		"f4",
-		"f5",
-		"f6",
-		"f7",
-		"f8",
-		"f9",
-		"fa",
-		"fb",
-		"fc",
-		"fd",
-		"fe",
-		"ff",
-	];
-	const d0 = Math.random() * 0xffffffff | 0;
-	const d1 = Math.random() * 0xffffffff | 0;
-	const d2 = Math.random() * 0xffffffff | 0;
-	const d3 = Math.random() * 0xffffffff | 0;
-	const uuid = _lut[d0 & 0xff] + _lut[d0 >> 8 & 0xff] + _lut[d0 >> 16 & 0xff] + _lut[d0 >> 24 & 0xff] + '-' +
-		_lut[d1 & 0xff] + _lut[d1 >> 8 & 0xff] + '-' + _lut[d1 >> 16 & 0x0f | 0x40] + _lut[d1 >> 24 & 0xff] + '-' +
-		_lut[d2 & 0x3f | 0x80] + _lut[d2 >> 8 & 0xff] + '-' + _lut[d2 >> 16 & 0xff] + _lut[d2 >> 24 & 0xff] +
-		_lut[d3 & 0xff] + _lut[d3 >> 8 & 0xff] + _lut[d3 >> 16 & 0xff] + _lut[d3 >> 24 & 0xff];
-	return uuid.toLowerCase();
-}
-
-console.log(generateUUID());
-
 function updateStatusBar() {
 	if(batteryLevel <= 0) batteryLevel = 0;
 	/* Battery Level */
@@ -322,6 +50,12 @@ function setLeftSideWidth(newWidth, smooth = false) {
 		rightSide.style.width = "50%";
 	}
 
+	if(newWidth != window.innerWidth && document.querySelector(".minimap-container").classList.contains("visible")) {
+		window.hideMinimap();
+	} else if(newWidth == window.innerWidth && !document.querySelector(".minimap-container").classList.contains("visible") && !window.isInteractingWithModel) {
+		window.showMinimap();
+	}
+
 	const factor =
 		(newWidth - 0.5 * window.innerWidth) / (0.5 * window.innerWidth);
 	const opacity = Math.max(0, factor); // Ensure opacity is not negative
@@ -347,25 +81,25 @@ function setLeftSideWidth(newWidth, smooth = false) {
 	).style.marginLeft = `${newMarginLeft}vw`;
 	window.onWindowResize();
 	window.map.resize();
+	window.minimap.resize();
 }
 
 function smoothSetLeftSideWidth(targetWidth, deltaMP = 0.15) {
 	const leftSide = document.querySelector(".leftSide");
 	let currentWidth = leftSide.clientWidth;
+		function step() {
+			const delta = (targetWidth - currentWidth) * deltaMP; // Adjust this value to change the speed of the animation
+			currentWidth += delta;
 
-	function step() {
-		const delta = (targetWidth - currentWidth) * deltaMP; // Adjust this value to change the speed of the animation
-		currentWidth += delta;
+			if (Math.abs(targetWidth - currentWidth) < 1) {
+				currentWidth = targetWidth;
+				setLeftSideWidth(Math.round(currentWidth));
+				clearInterval(resizeInterval); // Stop the interval
+				return;
+			}
 
-		if (Math.abs(targetWidth - currentWidth) < 1) {
-			currentWidth = targetWidth;
 			setLeftSideWidth(Math.round(currentWidth));
-			clearInterval(resizeInterval); // Stop the interval
-			return;
 		}
-
-		setLeftSideWidth(Math.round(currentWidth));
-	}
 
 	clearInterval(resizeInterval); // Clear any existing interval before starting a new one
 	resizeInterval = setInterval(step, 16); // Run the step function every 16 milliseconds (~60 FPS)
@@ -428,7 +162,72 @@ function onMouseUp(e) {
 	}
 }
 
+function updateWeather() {
+	const weatherAPI = `https://api.openweathermap.org/data/2.5/weather?lat=${window.lat}&lon=${window.lng}&exclude=minutely,hourly,daily,alerts&units=imperial&lang=en&APPID=${env.OPENWEATHERMAP.TEMP_KEY}`;
+	fetch(weatherAPI).then((response) => {
+		response.json().then((data) => {
+			document.getElementById("temperature").textContent = Math.round(
+				data.main.temp
+			) + "°F";
+		});
+	});
+}
+
+function toggleApp(appID, force = false) {
+	changeAppState(appID, "toggle", force);
+}
+
+function openApp(appID, force = false) {
+	changeAppState(appID, "open", force);
+}
+
+function closeApp(appID) {
+	changeAppState(appID, "close");
+}
+
+function changeAppState(appID, state = "close", force = false) {
+	if(!appID) return;
+	const apps = document.querySelectorAll(".app");
+	let thisApp;
+	for (let i = 0; i < apps.length; i++) {
+		thisApp = apps[i];
+		if (thisApp.getAttribute("data-appID") == appID || appID=="*") {
+			if(state == "open") {
+				if (thisApp.classList.contains("app-closed"))
+					thisApp.classList.remove("app-closed");
+				if (!thisApp.classList.contains("app-open"))
+					thisApp.classList.add("app-open");
+			} else if(state == "close") {
+				if (thisApp.classList.contains("app-open"))
+					thisApp.classList.remove("app-open");
+				if (!thisApp.classList.contains("app-closed"))
+					thisApp.classList.add("app-closed");
+			} else if(state == "toggle") {
+				if (thisApp.classList.contains("app-open")) {
+					thisApp.classList.remove("app-open");
+					if(!thisApp.classList.contains("app-closed"))
+					thisApp.classList.add("app-closed");
+				} else {
+					if (thisApp.classList.contains("app-closed"))
+						thisApp.classList.remove("app-closed");
+					if (!thisApp.classList.contains("app-open"))
+						thisApp.classList.add("app-open");
+				}
+			}
+		} else if (force) {
+			if (thisApp.classList.contains("app-open"))
+				thisApp.classList.remove("app-open");
+			if (!thisApp.classList.contains("app-closed"))
+				thisApp.classList.add("app-closed");
+		}
+	}
+}
+
+
 document.addEventListener('DOMContentLoaded', function () {
+	if (PersistentStorage.load("isDarkMode")) {
+		toggleDarkMode();
+	}
 	window.navigationFlyoutOriginalWidth =
 		(document.getElementById("navigation-flyout").clientWidth /
 			window.innerWidth) *
@@ -467,9 +266,15 @@ document.addEventListener('DOMContentLoaded', function () {
 	}, 50);
 	updateStatusBar();
 	setInterval(updateStatusBar, 1000);
-	setInterval(function () {
-		updateStatusBar();
-	}, 500);
+	let tryWeather = setInterval(() => {
+		if(window.lat && window.lng) {
+			clearInterval(tryWeather);
+			updateWeather();
+		}
+	}, 1);
+	setInterval(() => {
+		updateWeather();
+	}, (60) * 1000);
 	// Add mouse events for resizer
 	const resizer = document.querySelector(".resizer");
 	resizer.addEventListener("mousedown", onMouseDown, false);
@@ -485,6 +290,49 @@ function addButtonListeners() {
 			switch (button.getAttribute("data-buttonType")) {
 				case "open-navigation": {
 					smoothSetLeftSideWidth(0.5 * window.innerWidth);
+					break;
+				}
+				case "phone": {
+					smoothSetLeftSideWidth(0.5 * window.innerWidth);
+					toggleApp("phone", true);
+					break;
+				}
+				case "music": {
+					smoothSetLeftSideWidth(0.5 * window.innerWidth);
+					toggleApp("spotify", true);
+					break;
+				}
+				case "camera": {
+					smoothSetLeftSideWidth(0.5 * window.innerWidth);
+					toggleApp("camera", true);
+					break;
+				}
+				case "games": {
+					smoothSetLeftSideWidth(0.5 * window.innerWidth);
+					toggleApp("games", true);
+					break;
+				}
+				case "settings": {
+					smoothSetLeftSideWidth(0.5 * window.innerWidth);
+					toggleApp("settings", true);
+					break;
+				}
+				case "about": {
+					smoothSetLeftSideWidth(0.5 * window.innerWidth);
+					toggleApp("settings", true);
+					break;
+				}
+				case "play-pause-playback": {
+					togglePlayback();
+					break;
+				}
+				case "skip-song": {
+					play();
+					break;
+				}
+				case "previous-song": {
+					playPrevious();
+					break;
 				}
 				default: {
 					console.error("Unknown button type");
@@ -506,3 +354,55 @@ function hideLoader() {
 			document.getElementById("loading").style.display = "none";
 		});
 }
+
+function toggleDarkMode() {
+	const root = document.documentElement;
+	const isDarkMode = root.style.getPropertyValue("--theme") === "dark";
+
+	if (isDarkMode) {
+		// Switch to light mode
+		root.style.setProperty("--theme", "light");
+		root.style.setProperty("--cur-bg", "var(--bg-light)");
+		root.style.setProperty("--cur-ui", "var(--ui-light)");
+		root.style.setProperty("--cur-ui-glassy-A", "var(--ui-light-glassy-A)");
+		root.style.setProperty("--cur-ui-glassy-B", "var(--ui-light-glassy-B)");
+		root.style.setProperty("--cur-ui-sub", "var(--ui-sub-light)");
+		root.style.setProperty("--cur-primary", "var(--primary-light)");
+		root.style.setProperty("--cur-sub", "var(--sub-light)");
+		root.style.setProperty("--cur-alt", "var(--alt-light)");
+	} else {
+		// Switch to dark mode
+		root.style.setProperty("--theme", "dark");
+		root.style.setProperty("--cur-bg", "var(--bg-dark)");
+		root.style.setProperty("--cur-ui", "var(--ui-dark)");
+		root.style.setProperty("--cur-ui-glassy-A", "var(--ui-dark-glassy-A)");
+		root.style.setProperty("--cur-ui-glassy-B", "var(--ui-dark-glassy-B)");
+		root.style.setProperty("--cur-ui-sub", "var(--ui-sub-dark)");
+		root.style.setProperty("--cur-primary", "var(--primary-dark)");
+		root.style.setProperty("--cur-sub", "var(--sub-dark)");
+		root.style.setProperty("--cur-alt", "var(--alt-dark)");
+	}
+
+	PersistentStorage.save("isDarkMode", !isDarkMode);
+
+	window.themeRefreshRender(isDarkMode);
+	window.themeRefreshMap(isDarkMode);
+}
+
+document.addEventListener("keydown", (e) => {
+	if (e.key === "p") {
+		// B key changed to p key for play functionality
+		let list = prompt("Enter list for playback:");
+		if (list != "" && list != null) {
+			list = list.replace("spotify:playlist:", "");
+			queuePlaylist(list);
+		} else alert("Please enter a valid playlist");
+	} else if (e.key === "b") {
+		let dS = prompt("Enter destination");
+		if (dS != "" && dS != null) {
+			window.navigateTo(dS);
+		} else alert("Please enter a valid destination");
+	} else if (e.key === "d") {
+		toggleDarkMode();
+	}
+});

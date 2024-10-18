@@ -61,30 +61,45 @@
 	}
 }
 
-/* Root Variables */
+/* Variables */
 :root {
 	--theme: light;
 	--transitionFast: 0.18s;
-	--radius: 0.66vw;
+	--transitionMedium: calc(var(--transitionFast) * 2);
+	--transitionSlow: calc(var(--transitionFast) * 3);
+	--transitionCurve: cubic-bezier(0.16, 0.56, 0.39, 1);
+	--radius: 0.46vw;
 	--blur: 10px;
 
 	/* Light Mode */
-	--bg-light: rgba(244, 244, 246, 1);
-	--ui-light: rgba(242, 239, 240, 0.9);
-	--ui-light-glassy: rgba(242, 239, 240, 0.7);
-	--ui-sub-light: rgba(229, 228, 228, 1);
-	--primary-light: rgba(209, 208, 208, 1);
+	--bg-light: rgba(244, 244, 244, 1);
+	--ui-light: rgba(242, 239, 240, 1);
+	--ui-light-glassy-A: rgba(242, 239, 240, 0.9);
+	--ui-light-glassy-B: rgba(242, 239, 240, 0.8);
+	--ui-sub-light: rgba(228, 228, 228, 1);
+	--primary-light: rgba(208, 208, 208, 1);
 	--sub-light: rgba(148, 148, 148, 1);
 	--alt-light: rgba(74, 74, 74, 1);
 
 	/* Dark Mode */
 	--bg-dark: rgba(7, 7, 7, 1);
-	--ui-dark: rgba(30, 30, 30, 0.9);
-	--ui-dark-glassy: rgba(30, 30, 30, 0.7);
-	--ui-sub-dark: rgba(35, 35, 35, 1);
+	--ui-dark: rgba(30, 30, 30, 1);
+	--ui-dark-glassy-A: rgba(30, 30, 30, 0.9);
+	--ui-dark-glassy-B: rgba(30, 30, 30, 0.8);
+	--ui-sub-dark: rgba(43, 43, 43, 1);
 	--primary-dark: rgba(165, 165, 165, 1);
-	--sub-dark: rgba(166, 166, 166, 1);
-	--alt-dark: rgba(231, 230, 230, 1);
+	--sub-dark: rgba(198, 198, 198, 1);
+	--alt-dark: rgba(230, 230, 230, 1);
+
+	/* Current Theme */
+	--cur-bg: var(--bg-light);
+	--cur-ui: var(--ui-light);
+	--cur-ui-glassy-A: var(--ui-light-glassy-A);
+	--cur-ui-glassy-B: var(--ui-light-glassy-B);
+	--cur-ui-sub: var(--ui-sub-light);
+	--cur-primary: var(--primary-light);
+	--cur-sub: var(--sub-light);
+	--cur-alt: var(--alt-light);
 
 	/* Universal */
 	--ui-font: "Spark Sans", Arial, sans-serif;
@@ -121,13 +136,13 @@
 
 /* Transitions */
 .transition {
-	transition: all var(--transitionFast) cubic-bezier(0.16, 0.56, 0.39, 1);
+	transition: all var(--transitionFast) var(--transitionCurve);
 }
 
 /* Loading Screen */
 #loading {
-	background-color: var(--bg-light);
-	color: var(--sub-light);
+	background-color: var(--cur-bg);
+	color: var(--cur-sub);
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -138,13 +153,24 @@
 	left: 0;
 	width: 100%;
 	height: 100%;
-	transition: all 0.32s cubic-bezier(0.16, 0.56, 0.39, 1);
 }
 
 .loader {
 	min-width: 3vw;
 	min-height: 3vw;
-	border: 0.55vw solid var(--primary-light);
+	border: calc(3vw / 5.4) solid var(--cur-primary);
+	border-bottom-color: transparent;
+	border-radius: 50%;
+	display: inline-block;
+	box-sizing: border-box;
+	animation: spin 1s linear infinite;
+	opacity: 1;
+}
+
+#oauthLoader {
+	min-width: 20vw;
+	min-height: 20vw;
+	border: calc(20vw / 5.4) solid var(--cur-primary);
 	border-bottom-color: transparent;
 	border-radius: 50%;
 	display: inline-block;
@@ -159,7 +185,6 @@
 	display: none;
 	flex-direction: column;
 	opacity: 0;
-	transition: all 0.19s cubic-bezier(0.16, 0.56, 0.39, 1);
 }
 
 .loadText {
@@ -172,7 +197,7 @@
 	position: relative;
 	height: 1vw;
 	width: 30vw;
-	background-color: var(--primary-light);
+	background-color: var(--cur-primary);
 	border-radius: 1vw;
 	overflow: hidden;
 	display: block;
@@ -185,15 +210,15 @@
 	height: 100%;
 	width: 0;
 	border-radius: 1vw;
-	background: var(--sub-light);
-	transition: width 0.5s ease;
+	background: var(--cur-sub);
+	transition: width var(--transitionSlow) ease;
 }
 
 /* Body */
 body {
 	font-family: var(--ui-font);
 	letter-spacing: 0.036vw;
-	background: var(--bg-light);
+	background: var(--cur-bg);
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -210,11 +235,11 @@ body {
 i {
 	align-content: center;
 	justify-content: center;
-	color: var(--sub-light);
+	color: var(--cur-sub);
 }
 
 span {
-	color: var(--sub-light);
+	color: var(--cur-sub);
 }
 
 /* UI Container */
@@ -231,7 +256,7 @@ span {
 	position: absolute;
 	top: 0;
 	right: 0.2vw;
-	z-index: 100;
+	z-index: 4;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -245,7 +270,7 @@ span {
 	border-radius: var(--radius);
 	backdrop-filter: blur(var(--blur));
 	cursor: pointer;
-	background-color: var(--sub-light);
+	background-color: var(--cur-sub);
 	opacity: 0.8;
 	position: relative; /* To position the pseudo-element */
 	pointer-events: auto; /* Re-enable pointer-events for the resizer itself */
@@ -279,6 +304,8 @@ span {
 
 .leftSide {
 	width: 100%;
+	box-shadow: 0.1vw 0 0.2vw var(--shadow);
+	z-index: 3;
 }
 
 .rightSide {
@@ -308,15 +335,13 @@ span {
 	color: var(--status-bar-color);
 	font-family: var(--ui-font);
 	z-index: 10;
+	pointer-events: none;
 }
 
 .status-left,
 .status-right {
 	display: flex;
 	align-items: center;
-}
-
-.status-left {
 	gap: 1vw;
 }
 
@@ -335,7 +360,7 @@ span {
 	width: 2.5vw;
 	margin-right: 0.19vw;
 	height: 0.8vw;
-	background: var(--primary-light);
+	background: var(--cur-primary);
 	border-radius: 0.1vw;
 	display: flex;
 	align-items: center;
@@ -348,21 +373,21 @@ span {
 	right: -0.19vw;
 	width: 0.19vw;
 	height: 0.5vw;
-	background: var(--primary-light);
+	background: var(--cur-primary);
 	border-top-right-radius: 0.1vw;
 	border-bottom-right-radius: 0.1vw;
 }
 
 .battery-level {
 	height: 100%;
-	background-color: var(--alt-light);
+	background-color: var(--cur-alt);
 	border-radius: 0.1vw;
 }
 
 .battery-percentage {
 	font-size: var(--status-bar-font-size);
 	line-height: var(--status-bar-font-size);
-	color: var(--alt-light);
+	color: var(--cur-alt);
 }
 
 .status-right {
@@ -370,7 +395,7 @@ span {
 }
 
 .status-right span {
-	color: var(--alt-light);
+	color: var(--cur-alt);
 }
 
 .status-bar span {
@@ -379,7 +404,7 @@ span {
 }
 
 .shifter .shifted {
-	color: var(--alt-light);
+	color: var(--cur-alt);
 	font-family: var(--bold-font);
 }
 
@@ -475,7 +500,7 @@ canvas {
 	display: none;
 	justify-content: center;
 	align-items: center;
-	z-index: 100;
+	z-index: 999;
 }
 
 #teslaImage {
@@ -504,16 +529,18 @@ canvas {
 	width: 100%;
 	justify-content: flex-start;
 	z-index: 2;
+	pointer-events: none;
 }
 
 .flyout {
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	background: var(--ui-light);
+	background: var(--cur-ui-glassy-A);
 	border-radius: var(--radius);
 	backdrop-filter: blur(var(--blur));
 	height: 100%;
+	pointer-events: auto !important
 }
 
 .music-flyout {
@@ -530,7 +557,7 @@ canvas {
 }
 
 .directions-flyout i {
-	font-size: 1.4vw;
+	font-size: 1.0vw;
 }
 
 .navigation-flyout {
@@ -548,7 +575,7 @@ canvas {
 }
 
 .icon-titleColor {
-	color: var(--alt-light) !important;
+	color: var(--cur-alt) !important;
 }
 
 .flyout-upperSection {
@@ -582,7 +609,7 @@ canvas {
 	border: none;
 	background: none;
 	font-family: var(--ui-font);
-	color: var(--sub-light);
+	color: var(--cur-sub);
 	font-size: 1.4vw;
 	padding-left: 2.5vw;
 	padding-inline: 0 !important;
@@ -612,11 +639,11 @@ canvas {
 }
 
 .song-title {
-	color: var(--alt-light);
+	color: var(--cur-alt);
 }
 
-.song-artist {
-	color: var(--sub-light);
+.song-artists {
+	color: var(--cur-sub);
 }
 
 .music-right {
@@ -626,14 +653,14 @@ canvas {
 }
 
 .music-right i {
-	color: var(--sub-light);
+	color: var(--cur-sub);
 }
 
 /* Divider */
 .horizontal-divider {
 	width: 100%;
 	height: var(--flyout-horizontal-divider-height);
-	background: var(--ui-sub-light);
+	background: var(--cur-ui-sub);
 	margin: var(--flyout-horizontal-divider-margin) 0;
 	position: relative;
 }
@@ -641,11 +668,18 @@ canvas {
 .horizontal-divider .progress {
 	width: 0;
 	height: 100%;
-	background: var(--alt-light);
+	background: var(--cur-alt);
 	position: absolute;
 	top: 0;
 	left: 0;
-	transition: width 0.3s ease;
+}
+
+.progress {
+    transition: width var(--transitionFast) var(--transitionCurve);
+}
+
+.progress-no-transition {
+    transition: none !important;
 }
 
 /* Flyout Lower Section */
@@ -656,7 +690,7 @@ canvas {
 }
 
 .music-flyout-lowerSection i {
-	color: var(--sub-light);
+	color: var(--cur-sub);
 }
 
 .navigation-flyout-lowerSection {
@@ -678,43 +712,203 @@ canvas {
 
 .navigation-item i {
 	font-size: 1.4vw;
-	color: var(--sub-light);
+	color: var(--cur-sub);
 }
 
 .navigation-item span {
 	font-family: var(--ui-font);
 	font-size: 1.4vw;
-	color: var(--sub-light);
+	color: var(--cur-sub);
 }
 
 .vertical-divider {
 	width: 0.102vw;
 	height: 1.56vw;
-	background: var(--ui-sub-light);
+	background: var(--cur-ui-sub);
 }
 
 /* Directions Flyout */
 .directions-flyout {
 	width: 20vw;
-	background-color: var(--ui-light-glassy);
+	background-color: var(--cur-ui-glassy-B);
 	box-shadow: 0 0 0.5vw var(--shadow);
-	font-size: 1vw;
+}
+
+.directions-flyout-upperSection span {
+	font-size: 1.2vw !important;
 }
 
 /* Maps */
-#map {
+#map, #minimap {
 	position: absolute;
 	top: 0;
 	bottom: 0;
 	right: 0;
 	left: 0;
+	transition: opacity var(--transitionMedium) var(--transitionCurve);
 }
+
+.minimap-container {
+	position: absolute;
+	right: 0vw;
+	top: 0vw;
+	width: 25%;
+	aspect-ratio : 1 / 1;
+	overflow: hidden;
+	z-index: 1;
+	mask-image:
+    linear-gradient(to bottom, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 99%),
+    linear-gradient(to left, rgba(0, 0, 0, 1) 60%, rgba(0, 0, 0, 0) 99%);
+  	mask-composite: intersect;
+	pointer-events: none;
+	transition: opacity var(--transitionMedium) var(--transitionCurve);
+}
+
+.hidden {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.visible {
+	opacity: 1;
+	pointer-events: unset;
+}
+
 .turn-by-turn {
 	margin: 5px 0;
 }
+
 .arrow-marker {
 	background-image: url("../assets/images/arrow-light.png");
 	background-size: cover;
 	width: 55px;
 	height: 55px;
+}
+
+/* Apps */
+.app {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
+	align-items: center;
+	width: 100%;
+	position: absolute;
+	bottom: 0;
+	z-index: 2;
+	box-shadow: 0 0.2vw 0.5vw var(--shadow);
+	background-color: var(--cur-ui);
+	border-top-left-radius: calc(var(--radius) * 1.5);
+	border-top-right-radius: calc(var(--radius) * 1.5);
+	transition: height var(--transitionMedium) var(--transitionCurve);
+}
+
+.app-open {
+	height: 85%;
+	pointer-events: auto;
+}
+
+.app-closed {
+	height: 0%;
+	pointer-events: none;
+}
+
+/* Spotify App */
+
+.SP_spotify-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1vw;
+    background-color: var(--cur-ui);
+    border-bottom: 0.1vw solid var(--cur-primary);
+}
+
+.SP_spotify-nav {
+    display: flex;
+    gap: 1vw;
+}
+
+.SP_tab-button {
+    background: none;
+    border: none;
+    font-size: 1.2vw;
+    cursor: pointer;
+    color: var(--cur-sub);
+}
+
+.SP_tab-button.SP_active {
+    color: var(--cur-alt);
+    border-bottom: 0.2vw solid var(--cur-alt);
+}
+
+.SP_spotify-controls {
+    display: flex;
+    gap: 1vw;
+}
+
+.SP_control-button {
+    background: none;
+    border: none;
+    font-size: 1.5vw;
+    cursor: pointer;
+    color: var(--cur-sub);
+}
+
+.SP_album-cover img {
+    width: 4vw;
+    height: 4vw;
+    border-radius: 0.5vw;
+}
+
+.SP_spotify-content {
+    flex: 1;
+    padding: 1vw;
+    overflow-y: auto;
+}
+
+.SP_tabs {
+    display: flex;
+    flex-direction: column;
+}
+
+.SP_tab-content {
+    display: none;
+}
+
+.SP_tab-content.SP_active {
+    display: block;
+}
+
+.SP_song-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.SP_song-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5vw 0;
+    border-bottom: 0.1vw solid var(--cur-primary);
+}
+
+.SP_song-list li:last-child {
+    border-bottom: none;
+}
+
+.SP_song-title {
+    font-size: 1vw;
+    color: var(--cur-alt);
+}
+
+.SP_song-artist {
+    font-size: 0.9vw;
+    color: var(--cur-sub);
+}
+
+.SP_song-album,
+.SP_song-time {
+    font-size: 0.8vw;
+    color: var(--cur-primary);
 }
