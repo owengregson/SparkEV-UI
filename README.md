@@ -5,8 +5,8 @@
 <img src="assets/images/improved_100.png">
 <br>
 <p>A video demonstration of using the UI:</p>
-<video width="640" height="480" controls>
-  <source src="assets/videos/demo.mp4" type="video/mp4">
-</video>
+
+https://raw.githubusercontent.com/owengregson/SparkEV-UI/refs/heads/main/assets/videos/demo.mp4
+
 <br>
 <p>This UI could also be called a "Tesla UI Clone"</p>
