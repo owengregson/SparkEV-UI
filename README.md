@@ -6,7 +6,7 @@
 <br>
 <p>A video demonstration of using the UI:</p>
 
-https://raw.githubusercontent.com/owengregson/SparkEV-UI/refs/heads/main/assets/videos/demo.mp4
+https://github.com/owengregson/SparkEV-UI/raw/refs/heads/main/assets/videos/demo.mp4
 
 <br>
 <p>This UI could also be called a "Tesla UI Clone"</p>
